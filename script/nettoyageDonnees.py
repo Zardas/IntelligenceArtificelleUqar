@@ -154,4 +154,7 @@ dataCreature = suppressionFeatures(cop.deepcopy(dataCreature), ["type"])
 dataSpell = suppressionFeatures(cop.deepcopy(dataSpell), ["type"])
 dataWeapon = suppressionFeatures(cop.deepcopy(dataWeapon), ["type"])
 
-showData(dataSpell)
+showData(dataWeapon)
+
+
+
