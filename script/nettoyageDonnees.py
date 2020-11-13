@@ -1,6 +1,7 @@
 import pandas as pd
 import json as js
 import copy as cop
+from csv import DictReader
 
 #Les données ont été placés directement dans le fichier exercice3_data.csv
 #training_data = pd.read_csv("../data/donneesInitiales.csv", delimiter=";")
@@ -8,8 +9,8 @@ import copy as cop
 #print(training_data)
 
 
-training_data_json = open('../data/cards_collectible.json', encoding="utf-8") 
-data = js.load(training_data_json)
+weaponPaladinTraining = open('../data/cards_collectible.json', encoding="utf-8") 
+data = js.load(weaponPaladinTraining)
 
 #---------------------
 #Fonctions utilitaires
@@ -21,12 +22,26 @@ def showData(data):
         print(i, " : ", row)
         i = i + 1
 
+#Fonction visualisant les hashmap
+def showHashmap(hashmap):
+    for key in hashmap:
+        print(key, ": ", hashmap[key])
+
 #Fonction vérifiant si un élément est dans un array
 def isInArray(elem, givenArray):
     i = 0
     while (i+1) < len(givenArray) and elem != givenArray[i]:
         i = i + 1
     return elem == givenArray[i]
+
+#Retourne une hashmap plaçant une feature en key et le reste en value
+def transform_hashmap(data, key):
+    newHashmap = {}
+    for row in data:
+        currentKey = row.get(key)
+        row.pop(key, None)
+        newHashmap[currentKey] = row
+    return newHashmap
 
 #---------------------
 
@@ -87,10 +102,20 @@ def allElementsWithFeature_X_egalTo_Y(data, feature, values):
     return data
 
 
+#Fonction ajoutant une feature d'un hashmap à une autre hashmap
+def addFeature(fromData, feature, toData, newName):
+    for key in fromData:
+        rowToChange = toData[key]
+        rowToChange[newName] = fromData[key][feature]
 
 
+#Fonction ajoutant la feature jouabilité au dataset finalData à partir du json jsonData
+def addPercentage(jsonData, finalData):
+    datasetPercentage = open(jsonData, encoding="utf-8")
+    datasetPercentage = js.load(datasetPercentage)
+    datasetPercentage = transform_hashmap(cop.deepcopy(datasetPercentage), 'Name')
 
-
+    addFeature(datasetPercentage, "Percentage", finalData, "Jouabilite")
 
 
 # 1 - Suppression des sets non désirés
@@ -127,7 +152,6 @@ data = suppressionFeatures(cop.deepcopy(data), ["artist",
                                               "collectible",
                                               "dbfId",
                                               "id",
-                                              "set",
                                               "text",
                                               "howToEarn",
                                               "howToEarnGolden",
@@ -141,20 +165,78 @@ data = suppressionFeatures(cop.deepcopy(data), ["artist",
 
 
 
-# 4 - Division en trois datasets : creatures, sorts et armes
+
+
+
+
+# 4 - Division en données d'entrainement et de test
+# Les données de tests sont celles du dernier set (Scholomance), celles d'entrainement toutes les autres
+data_test = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data), "set", ["SCHOLOMANCE"])
+data = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data), "set", ["BLACK_TEMPLE", "CORE", "DEMON_HUNTER_INITIATE", "EXPERT1", "DALARAN", "DRAGONS", "ULDUM", "YEAR_OF_THE_DRAGON"])
+
+
+
+
+
+# 5 - Division en trois datasets : creatures, sorts et armes
 # Malheureusement, python passe les pramètres en reference, il faut donc faire une copie profonde avant de passer le dataset
 # en paramètre, afin qu'il ne soit pas modifié dans la fonction
-dataCreature = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data), "type", ["MINION"])
-dataSpell = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data), "type", ["SPELL"])
-dataWeapon = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data), "type", ["WEAPON"])
+creatureTraining = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data), "type", ["MINION"])
+spellTraining = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data), "type", ["SPELL"])
+weaponTraining = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data), "type", ["WEAPON"])
+
+creatureTest = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data_test), "type", ["MINION"])
+spellTest = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data_test), "type", ["SPELL"])
+weaponTest = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data_test), "type", ["WEAPON"])
 
 
-# 5 - Suppression de la dernière feature non désirée (type, que nous avions dû garder pour l'étape 4)
-dataCreature = suppressionFeatures(cop.deepcopy(dataCreature), ["type"])
-dataSpell = suppressionFeatures(cop.deepcopy(dataSpell), ["type"])
-dataWeapon = suppressionFeatures(cop.deepcopy(dataWeapon), ["type"])
-
-showData(dataWeapon)
 
 
+
+# 6 - Suppression des dernières features non désirées (type que nous avions dû garder pour l'étape 3, et set que nous avions dû garder à l'étape 4)
+creatureTraining = suppressionFeatures(cop.deepcopy(creatureTraining), ["type", "set"])
+spellTraining = suppressionFeatures(cop.deepcopy(spellTraining), ["type", "set"])
+weaponTraining = suppressionFeatures(cop.deepcopy(weaponTraining), ["type", "set"])
+
+creatureTest = suppressionFeatures(cop.deepcopy(creatureTest), ["type", "set"])
+spellTest = suppressionFeatures(cop.deepcopy(spellTest), ["type", "set"])
+weaponTest = suppressionFeatures(cop.deepcopy(weaponTest), ["type", "set"])
+
+
+# 7 - Transformation en hashmap
+creatureTraining = transform_hashmap(cop.deepcopy(creatureTraining), "name")
+creatureTest = transform_hashmap(cop.deepcopy(creatureTest), "name")
+
+spellTraining = transform_hashmap(cop.deepcopy(spellTraining), "name")
+spellTest = transform_hashmap(cop.deepcopy(spellTest), "name")
+
+weaponTraining = transform_hashmap(cop.deepcopy(weaponTraining), "name")
+weaponTest = transform_hashmap(cop.deepcopy(weaponTest), "name")
+
+
+# 8 - Ajout de la jouabilité
+
+#addPercentage("../data/paladin/creatureTrainingPercentage.json", creatureTraining)
+#addPercentage("../data/hunter/creatureTrainingPercentage.json", creatureTraining)
+
+#addPercentage("../data/paladin/creatureTestPercentage.json", creatureTest)
+#addPercentage("../data/hunter/creatureTestPercentage.json", creatureTest)
+
+
+#addPercentage("../data/paladin/spellTrainingPercentage.json", spellTraining)
+#addPercentage("../data/hunter/spellTrainingPercentage.json", spellTraining)
+
+#addPercentage("../data/paladin/spellTestPercentage.json", spellTest)
+#addPercentage("../data/hunter/spellTestPercentage.json", spellTest)
+
+
+#addPercentage("../data/paladin/weaponTestPercentage.json", weaponTest)
+#addPercentage("../data/hunter/weaponTestPercentage.json", weaponTest)
+
+addPercentage("../data/paladin/weaponTestPercentage.json", weaponTest)
+addPercentage("../data/hunter/weaponTestPercentage.json", weaponTest)
+
+showHashmap(weaponTest)
+
+    
 
