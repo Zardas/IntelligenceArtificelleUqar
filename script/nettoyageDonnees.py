@@ -216,27 +216,46 @@ weaponTest = transform_hashmap(cop.deepcopy(weaponTest), "name")
 
 # 8 - Ajout de la jouabilité
 
-#addPercentage("../data/paladin/creatureTrainingPercentage.json", creatureTraining)
-#addPercentage("../data/hunter/creatureTrainingPercentage.json", creatureTraining)
+addPercentage("../data/paladin/creatureTrainingPercentage.json", creatureTraining)
+addPercentage("../data/hunter/creatureTrainingPercentage.json", creatureTraining)
 
-#addPercentage("../data/paladin/creatureTestPercentage.json", creatureTest)
-#addPercentage("../data/hunter/creatureTestPercentage.json", creatureTest)
-
-
-#addPercentage("../data/paladin/spellTrainingPercentage.json", spellTraining)
-#addPercentage("../data/hunter/spellTrainingPercentage.json", spellTraining)
-
-#addPercentage("../data/paladin/spellTestPercentage.json", spellTest)
-#addPercentage("../data/hunter/spellTestPercentage.json", spellTest)
+addPercentage("../data/paladin/creatureTestPercentage.json", creatureTest)
+addPercentage("../data/hunter/creatureTestPercentage.json", creatureTest)
 
 
-#addPercentage("../data/paladin/weaponTestPercentage.json", weaponTest)
-#addPercentage("../data/hunter/weaponTestPercentage.json", weaponTest)
+addPercentage("../data/paladin/spellTrainingPercentage.json", spellTraining)
+addPercentage("../data/hunter/spellTrainingPercentage.json", spellTraining)
+
+addPercentage("../data/paladin/spellTestPercentage.json", spellTest)
+addPercentage("../data/hunter/spellTestPercentage.json", spellTest)
+
+
+addPercentage("../data/paladin/weaponTrainingPercentage.json", weaponTraining)
+addPercentage("../data/hunter/weaponTrainingPercentage.json", weaponTraining)
 
 addPercentage("../data/paladin/weaponTestPercentage.json", weaponTest)
 addPercentage("../data/hunter/weaponTestPercentage.json", weaponTest)
 
-showHashmap(weaponTest)
+showHashmap(creatureTest)
 
+# 9 - Enregistrement des 6 hashmap sous format json
+
+with open('../data/clean/creatureTraining.json', 'w') as json_file:
+    js.dump(creatureTraining, json_file)
+
+with open('../data/clean/creatureTest.json', 'w') as json_file:
+    js.dump(creatureTest, json_file)
+
+with open('../data/clean/spellTraining.json', 'w') as json_file:
+    js.dump(spellTraining, json_file)
+
+with open('../data/clean/spellTest.json', 'w') as json_file:
+    js.dump(spellTest, json_file)
+
+with open('../data/clean/weaponTraining.json', 'w') as json_file:
+    js.dump(weaponTraining, json_file)
+
+with open('../data/clean/weaponTest.json', 'w') as json_file:
+    js.dump(weaponTest, json_file)
     
 
