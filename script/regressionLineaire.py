@@ -16,20 +16,18 @@ def miseEnFormeFeatures(data_toChange):
     return data_toChange
 
 
-#Le mot clé NaN pose pas mal de soucis, donc on est obligé de le supprimer avec des méthodes peu conventionnelles comme celle-ci
-def supprimeNanColumn(data_to_change):
-    rowFound = False
-    for row in data_to_change:
-        if str(row) == "nan":
-            searchedRow = row
-            rowFound = True
 
-    if rowFound:
-        data_to_change = data_to_change[data_to_change.columns.drop(searchedRow)]
-    return data_to_change
+# Fonction utilitaire
+def supprimeSpecificColumns(data_toChange, featureList):
+    for feature in featureList:
+        data_toChange = data_toChange[data_toChange.columns.drop(feature)]
+    return data_toChange
 
 
-def transform(data_toChange, features):
+
+
+#Transforme une ou plusieurs colonnes avec des variables catégoriques en n colonnes où n est le nombre de catégories possibles
+def transformCategoricalVariables(data_toChange, features):
 
     #On commence par obtenir la liste des différentes versions possibles de chaque variable catégorie
     possibleVariables = []
@@ -58,8 +56,9 @@ def transform(data_toChange, features):
         #Puis on créer une nouvelle colonne à partir des données de ce tableau
         data_toChange[currentVariable] = var_array
 
-    #On en profite pour supprimer la colomne si elle NaN existe
 
+    #On en profite pour supprimer les colonnes originelles
+    data_toChange = supprimeSpecificColumns(data_toChange, features)
 
     return data_toChange
                 
@@ -74,8 +73,9 @@ def transform(data_toChange, features):
 
 data = pd.read_csv('../data/clean/csv/creatureTest.csv')
 data = miseEnFormeFeatures(data)
+data.fillna('aucun', inplace=True)
 
-
+#print(data)
 features = data[data.columns.drop(["Jouabilite", ""])]
 #features = data.loc[:, data.columns != "Jouabilite"]
 target = data["Jouabilite"]
@@ -98,13 +98,16 @@ features = features.rename(columns=lambda x: x.replace("cardClass", "Hunter?"))
 
 
 
-#feature2 = features.assign(address = ['Delhi', 'Bangalore', 'Chennai', 'Patna', 'Delhi', 'Bangalore', 'Chennai', 'Patna', 'Delhi', 'Bangalore', 'Chennai', 'Patna', 'Cheh']) 
+#Gestion des variables catégoriques
 
+features = transformCategoricalVariables(features, ["mechanics001", "mechanics002"])
+features = transformCategoricalVariables(features, ["rarity"])
+features = transformCategoricalVariables(features, ["referencedTags"])
+features = transformCategoricalVariables(features, ["race"])
 
-features = transform(features, ["mechanics001", "mechanics002"])
-features = transform(features, ["rarity"])
-features = supprimeNanColumn(features)
-features = supprimeNanColumn(features)
+#On supprime la colonne "aucun" que l'on a dû créer
+features = supprimeSpecificColumns(features, ["aucun"])
+
 print(features)
 
 
@@ -126,8 +129,6 @@ print(features)
 #reg = LinearRegression(normalize=True)
 #reg.fit(feature,target)
 
-#TODO : encode string
-#https://stackoverflow.com/questions/34007308/linear-regression-analysis-with-string-categorical-features-variables#34008270
 
 #https://larevueia.fr/regression-lineaire-fonctionnement-et-exemple-avec-python/
 #https://www.askpython.com/python/examples/polynomial-regression-in-python
