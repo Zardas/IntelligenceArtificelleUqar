@@ -213,7 +213,6 @@ spellTest = transform_hashmap(cop.deepcopy(spellTest), "name")
 weaponTraining = transform_hashmap(cop.deepcopy(weaponTraining), "name")
 weaponTest = transform_hashmap(cop.deepcopy(weaponTest), "name")
 
-
 # 8 - Ajout de la jouabilité
 
 addPercentage("../data/paladin/creatureTrainingPercentage.json", creatureTraining)
