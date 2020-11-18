@@ -16,26 +16,50 @@ def miseEnFormeFeatures(data_toChange):
     return data_toChange
 
 
+#Le mot clé NaN pose pas mal de soucis, donc on est obligé de le supprimer avec des méthodes peu conventionnelles comme celle-ci
+def supprimeNanColumn(data_to_change):
+    rowFound = False
+    for row in data_to_change:
+        if str(row) == "nan":
+            searchedRow = row
+            rowFound = True
+
+    if rowFound:
+        data_to_change = data_to_change[data_to_change.columns.drop(searchedRow)]
+    return data_to_change
 
 
-
-def transform(data_toChange, feature):
+def transform(data_toChange, features):
 
     #On commence par obtenir la liste des différentes versions possibles de chaque variable catégorie
     possibleVariables = []
-    for dat in data_toChange[feature]:
-        if (not dat in possibleVariables):
-            possibleVariables.append(dat)
-    
-    #Puis, pour chaque variables on créer une colonne et on la remplit avec true ou false en fonction de si la feature correspond à cette variable
-    for var in possibleVariables:
-        var_array = []
+    for feature in features:
         for dat in data_toChange[feature]:
-            var_array.append(dat == var)
-        #Pour chaque variable, on ajoute une colonne dont les valeurs valent True ou False en fonction de si l'élément à cette variable
-        print(var_array)
-        #data_toChange = data_toChange.assign(var = var_array)
-        data_toChange[var] = var_array
+            if (not dat in possibleVariables):
+                possibleVariables.append(dat)
+    
+
+
+    #On créer pour plus tard une matrice de Nombre_de_features*Nombre_de_cartes qui indique si la valeur de chaque feature pour chaque carte
+    cardVariables = []
+    for card in range(len(data[features[0]])):
+        cardVariablesCurrent = [] 
+        for numberOfFeatures in range(len(features)):
+            cardVariablesCurrent.append(data[features[numberOfFeatures]][card])
+        cardVariables.append(cardVariablesCurrent)
+
+
+
+    #Puis, pour chaque variables on créer une colonne et on la remplit avec true ou false en fonction de si la feature correspond à cette variable
+    for currentVariable in possibleVariables:
+        var_array= []
+        for dat in range(len(data_toChange[features[0]])):
+            var_array.append(currentVariable in cardVariables[dat])
+        #Puis on créer une nouvelle colonne à partir des données de ce tableau
+        data_toChange[currentVariable] = var_array
+
+    #On en profite pour supprimer la colomne si elle NaN existe
+
 
     return data_toChange
                 
@@ -53,6 +77,7 @@ data = miseEnFormeFeatures(data)
 
 
 features = data[data.columns.drop(["Jouabilite", ""])]
+#features = data.loc[:, data.columns != "Jouabilite"]
 target = data["Jouabilite"]
 
 
@@ -76,9 +101,13 @@ features = features.rename(columns=lambda x: x.replace("cardClass", "Hunter?"))
 #feature2 = features.assign(address = ['Delhi', 'Bangalore', 'Chennai', 'Patna', 'Delhi', 'Bangalore', 'Chennai', 'Patna', 'Delhi', 'Bangalore', 'Chennai', 'Patna', 'Cheh']) 
 
 
-features = transform(features, "mechanics001")
-
+features = transform(features, ["mechanics001", "mechanics002"])
+features = transform(features, ["rarity"])
+features = supprimeNanColumn(features)
+features = supprimeNanColumn(features)
 print(features)
+
+
 
 
 
