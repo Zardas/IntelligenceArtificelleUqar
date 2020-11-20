@@ -171,8 +171,8 @@ data = suppressionFeatures(cop.deepcopy(data), ["artist",
 
 # 4 - Division en données d'entrainement et de test
 # Les données de tests sont celles du dernier set (Scholomance), celles d'entrainement toutes les autres
-data_test = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data), "set", ["SCHOLOMANCE"])
-data = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data), "set", ["BLACK_TEMPLE", "CORE", "DEMON_HUNTER_INITIATE", "EXPERT1", "DALARAN", "DRAGONS", "ULDUM", "YEAR_OF_THE_DRAGON"])
+#data_test = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data), "set", ["SCHOLOMANCE"])
+#data = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data), "set", ["BLACK_TEMPLE", "CORE", "DEMON_HUNTER_INITIATE", "EXPERT1", "DALARAN", "DRAGONS", "ULDUM", "YEAR_OF_THE_DRAGON"])
 
 
 
@@ -181,80 +181,79 @@ data = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data), "set", ["BLACK_TEMP
 # 5 - Division en trois datasets : creatures, sorts et armes
 # Malheureusement, python passe les pramètres en reference, il faut donc faire une copie profonde avant de passer le dataset
 # en paramètre, afin qu'il ne soit pas modifié dans la fonction
-creatureTraining = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data), "type", ["MINION"])
-spellTraining = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data), "type", ["SPELL"])
-weaponTraining = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data), "type", ["WEAPON"])
+creatures = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data), "type", ["MINION"])
+spells = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data), "type", ["SPELL"])
+weapons = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data), "type", ["WEAPON"])
 
-creatureTest = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data_test), "type", ["MINION"])
-spellTest = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data_test), "type", ["SPELL"])
-weaponTest = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data_test), "type", ["WEAPON"])
+#creatureTest = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data_test), "type", ["MINION"])
+#spellTest = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data_test), "type", ["SPELL"])
+#weaponTest = allElementsWithFeature_X_egalTo_Y(cop.deepcopy(data_test), "type", ["WEAPON"])
 
 
 
 
 
 # 6 - Suppression des dernières features non désirées (type que nous avions dû garder pour l'étape 3, et set que nous avions dû garder à l'étape 4)
-creatureTraining = suppressionFeatures(cop.deepcopy(creatureTraining), ["type", "set"])
-spellTraining = suppressionFeatures(cop.deepcopy(spellTraining), ["type", "set"])
-weaponTraining = suppressionFeatures(cop.deepcopy(weaponTraining), ["type", "set"])
+creatures = suppressionFeatures(cop.deepcopy(creatures), ["type", "set"])
+spells = suppressionFeatures(cop.deepcopy(spells), ["type", "set"])
+weapons = suppressionFeatures(cop.deepcopy(weapons), ["type", "set"])
 
-creatureTest = suppressionFeatures(cop.deepcopy(creatureTest), ["type", "set"])
-spellTest = suppressionFeatures(cop.deepcopy(spellTest), ["type", "set"])
-weaponTest = suppressionFeatures(cop.deepcopy(weaponTest), ["type", "set"])
+#creatureTest = suppressionFeatures(cop.deepcopy(creatureTest), ["type", "set"])
+#spellTest = suppressionFeatures(cop.deepcopy(spellTest), ["type", "set"])
+#weaponTest = suppressionFeatures(cop.deepcopy(weaponTest), ["type", "set"])
 
 
 # 7 - Transformation en hashmap
-creatureTraining = transform_hashmap(cop.deepcopy(creatureTraining), "name")
-creatureTest = transform_hashmap(cop.deepcopy(creatureTest), "name")
+creatures = transform_hashmap(cop.deepcopy(creatures), "name")
+#creatureTest = transform_hashmap(cop.deepcopy(creatureTest), "name")
 
-spellTraining = transform_hashmap(cop.deepcopy(spellTraining), "name")
-spellTest = transform_hashmap(cop.deepcopy(spellTest), "name")
+spells = transform_hashmap(cop.deepcopy(spells), "name")
+#spellTest = transform_hashmap(cop.deepcopy(spellTest), "name")
 
-weaponTraining = transform_hashmap(cop.deepcopy(weaponTraining), "name")
-weaponTest = transform_hashmap(cop.deepcopy(weaponTest), "name")
+weapons = transform_hashmap(cop.deepcopy(weapons), "name")
+#weaponTest = transform_hashmap(cop.deepcopy(weaponTest), "name")
 
 # 8 - Ajout de la jouabilité
 
-addPercentage("../data/paladin/creatureTrainingPercentage.json", creatureTraining)
-addPercentage("../data/hunter/creatureTrainingPercentage.json", creatureTraining)
+addPercentage("../data/paladin/creatureTrainingPercentage.json", creatures)
+addPercentage("../data/hunter/creatureTrainingPercentage.json", creatures)
 
-addPercentage("../data/paladin/creatureTestPercentage.json", creatureTest)
-addPercentage("../data/hunter/creatureTestPercentage.json", creatureTest)
-
-
-addPercentage("../data/paladin/spellTrainingPercentage.json", spellTraining)
-addPercentage("../data/hunter/spellTrainingPercentage.json", spellTraining)
-
-addPercentage("../data/paladin/spellTestPercentage.json", spellTest)
-addPercentage("../data/hunter/spellTestPercentage.json", spellTest)
+addPercentage("../data/paladin/creatureTestPercentage.json", creatures)
+addPercentage("../data/hunter/creatureTestPercentage.json", creatures)
 
 
-addPercentage("../data/paladin/weaponTrainingPercentage.json", weaponTraining)
-addPercentage("../data/hunter/weaponTrainingPercentage.json", weaponTraining)
+addPercentage("../data/paladin/spellTrainingPercentage.json", spells)
+addPercentage("../data/hunter/spellTrainingPercentage.json", spells)
 
-addPercentage("../data/paladin/weaponTestPercentage.json", weaponTest)
-addPercentage("../data/hunter/weaponTestPercentage.json", weaponTest)
+addPercentage("../data/paladin/spellTestPercentage.json", spells)
+addPercentage("../data/hunter/spellTestPercentage.json", spells)
 
-showHashmap(creatureTest)
 
-# 9 - Enregistrement des 6 hashmap sous format json
+addPercentage("../data/paladin/weaponTrainingPercentage.json", weapons)
+addPercentage("../data/hunter/weaponTrainingPercentage.json", weapons)
 
-with open('../data/clean/creatureTraining.json', 'w') as json_file:
-    js.dump(creatureTraining, json_file)
+addPercentage("../data/paladin/weaponTestPercentage.json", weapons)
+addPercentage("../data/hunter/weaponTestPercentage.json", weapons)
 
-with open('../data/clean/creatureTest.json', 'w') as json_file:
-    js.dump(creatureTest, json_file)
 
-with open('../data/clean/spellTraining.json', 'w') as json_file:
-    js.dump(spellTraining, json_file)
+# 9 - Enregistrement des 3 hashmap sous format json
 
-with open('../data/clean/spellTest.json', 'w') as json_file:
-    js.dump(spellTest, json_file)
+with open('../data/clean/json/creatures.json', 'w') as json_file:
+    js.dump(creatures, json_file)
 
-with open('../data/clean/weaponTraining.json', 'w') as json_file:
-    js.dump(weaponTraining, json_file)
+#with open('../data/clean/creatureTest.json', 'w') as json_file:
+    #js.dump(creatureTest, json_file)
 
-with open('../data/clean/weaponTest.json', 'w') as json_file:
-    js.dump(weaponTest, json_file)
+with open('../data/clean/json/spells.json', 'w') as json_file:
+    js.dump(spells, json_file)
+
+#with open('../data/clean/spellTest.json', 'w') as json_file:
+    #js.dump(spellTest, json_file)
+
+with open('../data/clean/json/weapons.json', 'w') as json_file:
+    js.dump(weapons, json_file)
+
+#with open('../data/clean/weaponTest.json', 'w') as json_file:
+    #js.dump(weaponTest, json_file)
     
 

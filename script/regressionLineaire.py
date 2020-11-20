@@ -1,4 +1,5 @@
 from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
 import json as js
 import pandas as pd
 import numpy as np
@@ -40,10 +41,10 @@ def transformCategoricalVariables(data_toChange, features):
 
     #On créer pour plus tard une matrice de Nombre_de_features*Nombre_de_cartes qui indique si la valeur de chaque feature pour chaque carte
     cardVariables = []
-    for card in range(len(data[features[0]])):
+    for card in range(len(data_toChange[features[0]])):
         cardVariablesCurrent = [] 
         for numberOfFeatures in range(len(features)):
-            cardVariablesCurrent.append(data[features[numberOfFeatures]][card])
+            cardVariablesCurrent.append(data_toChange[features[numberOfFeatures]][card])
         cardVariables.append(cardVariablesCurrent)
 
 
@@ -65,50 +66,24 @@ def transformCategoricalVariables(data_toChange, features):
 
 
 
+# Ecrit les résultats de la prédiction du modèle dans fileName
+def printResults(targets_test, targets_predicted, fileName):
 
+    fileToWrite = open(fileName,"w")
 
+    i = 0
+    while i < len(targets_test) and i < len(targets_predicted):
+        difference = abs(targets_test[i] - targets_predicted[i])
+        if targets_predicted[i] > targets_test[i]:
+            sign = "Predicted higher"
+        else:
+            sign = "Predicted lower"
+        
+        line = "Expected : " + str(targets_test[i]) + " | Got : " +str(round(targets_predicted[i], 2)) + "| Difference : " + str(round(difference, 2)) + " (" + sign + ")\n"
+        fileToWrite.write(line)
+        i = i + 1
 
-
-
-
-data = pd.read_csv('../data/clean/csv/creatureTest.csv')
-data = miseEnFormeFeatures(data)
-data.fillna('aucun', inplace=True)
-
-#print(data)
-features = data[data.columns.drop(["Jouabilite", ""])]
-#features = data.loc[:, data.columns != "Jouabilite"]
-target = data["Jouabilite"]
-
-
-
-
-
-
-
-
-
-
-#Modification des variables catégoriques non adaptées pour la regression linéaire
-
-# Pour la classe, il n'y a que deux possibilité, on peut donc la transformer en Hunter? valant true si cardClass=hunter et false si cardClass=Paladin
-
-features['cardClass'] = features['cardClass'].replace(['HUNTER', 'PALADIN'],[True, False])
-features = features.rename(columns=lambda x: x.replace("cardClass", "Hunter?"))
-
-
-
-#Gestion des variables catégoriques
-
-features = transformCategoricalVariables(features, ["mechanics001", "mechanics002"])
-features = transformCategoricalVariables(features, ["rarity"])
-features = transformCategoricalVariables(features, ["referencedTags"])
-features = transformCategoricalVariables(features, ["race"])
-
-#On supprime la colonne "aucun" que l'on a dû créer
-features = supprimeSpecificColumns(features, ["aucun"])
-
-print(features)
+    fileToWrite.close()
 
 
 
@@ -124,11 +99,204 @@ print(features)
 
 
 
+#---------------------------------------
+# REGRESSION LINEAIRE POUR LES CREATURES
+
+def regressionLineaireCreatures():
+    #Training
+    data_creatures = pd.read_csv('../data/clean/csv/creatures.csv')
+    data_creatures = miseEnFormeFeatures(data_creatures)
+    #Remplacement des NaN car ils posent pas mal de soucis
+    data_creatures.fillna('aucun', inplace=True)
 
 
-#reg = LinearRegression(normalize=True)
-#reg.fit(feature,target)
+    features = data_creatures[data_creatures.columns.drop(["Jouabilite", ""])]
+    targets = data_creatures["Jouabilite"]
+
+
+    #Modification des variables catégoriques non adaptées pour la regression linéaire
+
+    # Pour la classe, il n'y a que deux possibilité, on peut donc la transformer en Hunter? valant true si cardClass=hunter et false si cardClass=Paladin
+    features.loc[features.cardClass == 'HUNTER', 'cardClass'] = True
+    features.loc[features.cardClass == 'PALADIN', 'cardClass'] = False
+    features = features.rename(columns=lambda x: x.replace("cardClass", "Hunter?"))
+
+
+    #Gestion des variables catégoriques
+    #On regroupe ensemble les catégories comprenant des variables identiques (comme les mechanics par exemple)
+    features = transformCategoricalVariables(features, ["mechanics001", "mechanics002", "mechanics003"])
+    features = transformCategoricalVariables(features, ["rarity"])
+    features = transformCategoricalVariables(features, ["referencedTags"])
+    features = transformCategoricalVariables(features, ["race"])
+
+    #On supprime la colonne "aucun" que l'on a dû créer
+    features = supprimeSpecificColumns(features, ["aucun"])
+
+    #Séparation variables de test et variables d'entrainement
+    features_training, features_test, targets_training, targets_test = train_test_split(features, targets, test_size=1/5, random_state=0)
+
+    #Entrainement du modèle
+    reg = LinearRegression(normalize=True)
+    reg.fit(features_training, targets_training)
+
+    #Test du modèle
+    target_prediction = reg.predict(features_test) 
+
+    print("Prédiction pour les créatures terminée")
+
+    printResults(targets_test.values, target_prediction, "../results/linearRegression_creatures.txt")
+
+#---------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#---------------------------------------
+# REGRESSION LINEAIRE POUR LES SORTS
+
+def regressionLineaireSpells():
+    #Training
+    data_spells = pd.read_csv('../data/clean/csv/spells.csv')
+    data_spells = miseEnFormeFeatures(data_spells)
+    #Remplacement des NaN car ils posent pas mal de soucis
+    data_spells.fillna('aucun', inplace=True)
+
+    features = data_spells[data_spells.columns.drop(["Jouabilite", ""])]
+    targets = data_spells["Jouabilite"]
+
+    #Modification des variables catégoriques non adaptées pour la regression linéaire
+
+    # Pour la classe, il n'y a que deux possibilité, on peut donc la transformer en Hunter? valant true si cardClass=hunter et false si cardClass=Paladin
+    features.loc[features.cardClass == 'HUNTER', 'cardClass'] = True
+    features.loc[features.cardClass == 'PALADIN', 'cardClass'] = False
+    features = features.rename(columns=lambda x: x.replace("cardClass", "Hunter?"))
+
+
+    #Gestion des variables catégoriques
+    features = transformCategoricalVariables(features, ["referencedTags001", "referencedTags002"])
+    features = transformCategoricalVariables(features, ["rarity"])
+    features = transformCategoricalVariables(features, ["mechanics"])
+
+    #On supprime la colonne "aucun" que l'on a dû créer
+    features = supprimeSpecificColumns(features, ["aucun"])
+
+    #Séparation variables de test et variables d'entrainement
+    features_training, features_test, targets_training, targets_test = train_test_split(features, targets, test_size=1/5, random_state=0)
+
+    #Entrainement du modèle
+    reg = LinearRegression(normalize=True)
+    reg.fit(features_training, targets_training)
+
+    #Test du modèle
+    target_prediction = reg.predict(features_test) 
+
+    print("Prédiction pour les sorts terminée")
+
+    printResults(targets_test.values, target_prediction, "../results/linearRegression_spells.txt")
+
+#---------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#---------------------------------------
+# REGRESSION LINEAIRE POUR LES ARMES
+
+def regressionLineaireWeapons():
+    #Training
+    data_weapons = pd.read_csv('../data/clean/csv/weapons.csv')
+    data_weapons = miseEnFormeFeatures(data_weapons)
+    #Remplacement des NaN car ils posent pas mal de soucis
+    data_weapons.fillna('aucun', inplace=True)
+
+    features = data_weapons[data_weapons.columns.drop(["Jouabilite", ""])]
+    targets = data_weapons["Jouabilite"]
+
+    #Modification des variables catégoriques non adaptées pour la regression linéaire
+
+    # Pour la classe, il n'y a que deux possibilité, on peut donc la transformer en Hunter? valant true si cardClass=hunter et false si cardClass=Paladin
+    features.loc[features.cardClass == 'HUNTER', 'cardClass'] = True
+    features.loc[features.cardClass == 'PALADIN', 'cardClass'] = False
+    features = features.rename(columns=lambda x: x.replace("cardClass", "Hunter?"))
+
+
+    #Gestion des variables catégoriques
+    features = transformCategoricalVariables(features, ["referencedTags"])
+    features = transformCategoricalVariables(features, ["rarity"])
+    features = transformCategoricalVariables(features, ["mechanics"])
+
+    #On supprime la colonne "aucun" que l'on a dû créer
+    features = supprimeSpecificColumns(features, ["aucun"])
+
+     #Séparation variables de test et variables d'entrainement
+    features_training, features_test, targets_training, targets_test = train_test_split(features, targets, test_size=1/5, random_state=0)
+
+    #Entrainement du modèle
+    reg = LinearRegression(normalize=True)
+    reg.fit(features_training, targets_training)
+
+    #Test du modèle
+    target_prediction = reg.predict(features_test) 
+
+    print(target_prediction)
+    print("Prédiction pour les armes terminée")
+
+    printResults(targets_test.values, target_prediction, "../results/linearRegression_weapons.txt")
+
+#---------------------------------------
+
+
+
+
+
+#Creatures
+regressionLineaireCreatures()
+
+#Sorts
+regressionLineaireSpells()
+
+#Armes
+regressionLineaireWeapons()
+
 
 
 #https://larevueia.fr/regression-lineaire-fonctionnement-et-exemple-avec-python/
 #https://www.askpython.com/python/examples/polynomial-regression-in-python
+#https://www.askpython.com/python/examples/linear-regression-in-python
+#https://www.youtube.com/watch?v=rw84t7QU2O0
