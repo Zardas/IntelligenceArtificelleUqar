@@ -1,13 +1,6 @@
-from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import train_test_split
 from sklearn import tree
-import json as js
+from sklearn.model_selection import train_test_split
 import pandas as pd
-import numpy as np
-
-
-
-
 
 # Correction des derniers soucis du csv
 # Des | et des _ ont été rajoutés lors du passage json->csv, il faut les supprimer
@@ -17,11 +10,32 @@ def miseEnFormeFeatures(data_toChange):
 
 
 
+
 # Fonction utilitaire
 def supprimeSpecificColumns(data_toChange, featureList):
     for feature in featureList:
         data_toChange = data_toChange[data_toChange.columns.drop(feature)]
     return data_toChange
+
+
+
+
+# Transforme la jouabilité en variables catégorique
+def transformationJouabilite(jouabilites):
+    targets = []
+    for target in jouabilites:
+        if target < 20:
+            targets.append("E")
+        elif target >= 20 and target < 40:
+            targets.append("D")
+        elif target >= 40 and target < 60:
+            targets.append("C")
+        elif target >= 60 and target < 80:
+            targets.append("B")
+        elif target >= 80:
+            targets.append("A")
+    return targets
+
 
 
 
@@ -61,7 +75,9 @@ def transformCategoricalVariables(data_toChange, features):
     data_toChange = supprimeSpecificColumns(data_toChange, features)
 
     return data_toChange
-                
+               
+
+
 
 
 
@@ -72,13 +88,8 @@ def printResults(targets_test, targets_predicted, fileName):
 
     i = 0
     while i < len(targets_test) and i < len(targets_predicted):
-        difference = abs(targets_test[i] - abs(targets_predicted[i]))
-        if abs(targets_predicted[i]) > targets_test[i]:
-            sign = "Predicted higher"
-        else:
-            sign = "Predicted lower"
         
-        line = "Expected : " + str(targets_test[i]) + " | Got : " +str(round(abs(targets_predicted[i]), 2)) + "| Difference : " + str(round(difference, 2)) + " (" + sign + ")\n"
+        line = "Expected : " + targets_test[i] + " | Got : " + targets_predicted[i] + "\n"
         fileToWrite.write(line)
         i = i + 1
 
@@ -98,10 +109,13 @@ def printResults(targets_test, targets_predicted, fileName):
 
 
 
-#---------------------------------------
-# REGRESSION LINEAIRE POUR LES CREATURES
 
-def regressionLineaireCreatures():
+
+
+#---------------------------------------
+# ARBRE DE DECISION POUR LES CREATURES
+def decisionTreeCreatures():
+
 
     data_creatures = pd.read_csv('../data/clean/csv/creatures.csv')
     data_creatures = miseEnFormeFeatures(data_creatures)
@@ -110,10 +124,13 @@ def regressionLineaireCreatures():
 
 
     features = data_creatures[data_creatures.columns.drop(["Jouabilite", ""])]
-    targets = data_creatures["Jouabilite"]
 
 
-    #Modification des variables catégoriques non adaptées pour la regression linéaire
+    #Transformation de la jouabilité pour qu'elle soit catégorique
+    targets = transformationJouabilite(data_creatures["Jouabilite"])
+
+
+    #Modification des variables catégoriques non adaptées pour l'arbre de décision
 
     # Pour la classe, il n'y a que deux possibilité, on peut donc la transformer en Hunter? valant true si cardClass=hunter et false si cardClass=Paladin
     features.loc[features.cardClass == 'HUNTER', 'cardClass'] = True
@@ -134,54 +151,61 @@ def regressionLineaireCreatures():
     #Séparation variables de test et variables d'entrainement
     features_training, features_test, targets_training, targets_test = train_test_split(features, targets, test_size=1/5, random_state=0)
 
-    #Entrainement du modèle
-    reg = LinearRegression(normalize=True)
-    reg.fit(features_training, targets_training)
+
+    #Création de l'arbre
+    tree_model = tree.DecisionTreeClassifier()
+
+    #Apprentissage
+    tree_model.fit(features, targets)
 
     #Test du modèle
-    target_prediction = reg.predict(features_test) 
+    target_prediction = tree_model.predict(features_test) 
 
-    print("Prédiction pour les créatures terminée")
+    print("Prédiction pour les creatures terminée (arbre de décision)")
 
-    printResults(targets_test.values, target_prediction, "../results/linearRegression_creatures.txt")
-
-#---------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    printResults(targets_test, target_prediction, "../results/decisionsTree_creatures.txt")
 
 #---------------------------------------
-# REGRESSION LINEAIRE POUR LES SORTS
 
-def regressionLineaireSpells():
 
-    data_spells = pd.read_csv('../data/clean/csv/spells.csv')
-    data_spells = miseEnFormeFeatures(data_spells)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#---------------------------------------
+# ARBRE DE DECISION POUR LES SORTS
+def decisionTreeSorts():
+
+
+    data_sorts = pd.read_csv('../data/clean/csv/spells.csv')
+    data_sorts = miseEnFormeFeatures(data_sorts)
     #Remplacement des NaN car ils posent pas mal de soucis
-    data_spells.fillna('aucun', inplace=True)
+    data_sorts.fillna('aucun', inplace=True)
 
-    features = data_spells[data_spells.columns.drop(["Jouabilite", ""])]
-    targets = data_spells["Jouabilite"]
 
-    #Modification des variables catégoriques non adaptées pour la regression linéaire
+    features = data_sorts[data_sorts.columns.drop(["Jouabilite", ""])]
+
+
+    #Transformation de la jouabilité pour qu'elle soit catégorique
+    targets = transformationJouabilite(data_sorts["Jouabilite"])
+
+
+    #Modification des variables catégoriques non adaptées pour l'arbre de décision
 
     # Pour la classe, il n'y a que deux possibilité, on peut donc la transformer en Hunter? valant true si cardClass=hunter et false si cardClass=Paladin
     features.loc[features.cardClass == 'HUNTER', 'cardClass'] = True
@@ -190,9 +214,11 @@ def regressionLineaireSpells():
 
 
     #Gestion des variables catégoriques
+    #On regroupe ensemble les catégories comprenant des variables identiques (comme les referencedTags par exemple)
     features = transformCategoricalVariables(features, ["referencedTags001", "referencedTags002"])
     features = transformCategoricalVariables(features, ["rarity"])
     features = transformCategoricalVariables(features, ["mechanics"])
+
 
     #On supprime la colonne "aucun" que l'on a dû créer
     features = supprimeSpecificColumns(features, ["aucun"])
@@ -200,54 +226,65 @@ def regressionLineaireSpells():
     #Séparation variables de test et variables d'entrainement
     features_training, features_test, targets_training, targets_test = train_test_split(features, targets, test_size=1/5, random_state=0)
 
-    #Entrainement du modèle
-    reg = LinearRegression(normalize=True)
-    reg.fit(features_training, targets_training)
+
+    #Création de l'arbre
+    tree_model = tree.DecisionTreeClassifier()
+
+    #Apprentissage
+    tree_model.fit(features, targets)
 
     #Test du modèle
-    target_prediction = reg.predict(features_test) 
+    target_prediction = tree_model.predict(features_test) 
 
-    print("Prédiction pour les sorts terminée")
+    print("Prédiction pour les sorts terminée (arbre de décision)")
 
-    printResults(targets_test.values, target_prediction, "../results/linearRegression_spells.txt")
-
-#---------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    printResults(targets_test, target_prediction, "../results/decisionsTree_spells.txt")
 
 #---------------------------------------
-# REGRESSION LINEAIRE POUR LES ARMES
 
-def regressionLineaireWeapons():
 
-    data_weapons = pd.read_csv('../data/clean/csv/weapons.csv')
-    data_weapons = miseEnFormeFeatures(data_weapons)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#---------------------------------------
+# ARBRE DE DECISION POUR LES ARMES
+def decisionTreeWeapons():
+
+
+    data_sorts = pd.read_csv('../data/clean/csv/weapons.csv')
+    data_sorts = miseEnFormeFeatures(data_sorts)
     #Remplacement des NaN car ils posent pas mal de soucis
-    data_weapons.fillna('aucun', inplace=True)
+    data_sorts.fillna('aucun', inplace=True)
 
-    features = data_weapons[data_weapons.columns.drop(["Jouabilite", ""])]
-    targets = data_weapons["Jouabilite"]
 
-    #Modification des variables catégoriques non adaptées pour la regression linéaire
+    features = data_sorts[data_sorts.columns.drop(["Jouabilite", ""])]
+
+
+    #Transformation de la jouabilité pour qu'elle soit catégorique
+    targets = transformationJouabilite(data_sorts["Jouabilite"])
+
+
+    #Modification des variables catégoriques non adaptées pour l'arbre de décision
 
     # Pour la classe, il n'y a que deux possibilité, on peut donc la transformer en Hunter? valant true si cardClass=hunter et false si cardClass=Paladin
     features.loc[features.cardClass == 'HUNTER', 'cardClass'] = True
@@ -260,22 +297,26 @@ def regressionLineaireWeapons():
     features = transformCategoricalVariables(features, ["rarity"])
     features = transformCategoricalVariables(features, ["mechanics"])
 
+
     #On supprime la colonne "aucun" que l'on a dû créer
     features = supprimeSpecificColumns(features, ["aucun"])
 
-     #Séparation variables de test et variables d'entrainement
+    #Séparation variables de test et variables d'entrainement
     features_training, features_test, targets_training, targets_test = train_test_split(features, targets, test_size=1/5, random_state=0)
 
-    #Entrainement du modèle
-    reg = LinearRegression(normalize=True)
-    reg.fit(features_training, targets_training)
+
+    #Création de l'arbre
+    tree_model = tree.DecisionTreeClassifier()
+
+    #Apprentissage
+    tree_model.fit(features, targets)
 
     #Test du modèle
-    target_prediction = reg.predict(features_test) 
+    target_prediction = tree_model.predict(features_test) 
 
-    print("Prédiction pour les armes terminée")
+    print("Prédiction pour les armes terminée (arbre de décision)")
 
-    printResults(targets_test.values, target_prediction, "../results/linearRegression_weapons.txt")
+    printResults(targets_test, target_prediction, "../results/decisionsTree_weapons.txt")
 
 #---------------------------------------
 
@@ -294,38 +335,11 @@ def regressionLineaireWeapons():
 
 
 
+# Arbre de décision pour les créatures
+decisionTreeCreatures()
 
+#Arbre de décision pour les sorts
+decisionTreeSorts()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#Creatures
-regressionLineaireCreatures()
-
-#Sorts
-regressionLineaireSpells()
-
-#Armes
-regressionLineaireWeapons()
-
-
-
-#https://larevueia.fr/regression-lineaire-fonctionnement-et-exemple-avec-python/
-#https://www.askpython.com/python/examples/polynomial-regression-in-python
-#https://www.askpython.com/python/examples/linear-regression-in-python
-#https://www.youtube.com/watch?v=rw84t7QU2O0
+#Arbre de décision pour les armes
+decisionTreeWeapons()
