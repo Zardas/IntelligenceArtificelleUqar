@@ -4,6 +4,7 @@ from sklearn import tree
 import json as js
 import pandas as pd
 import numpy as np
+import csv
 
 
 
@@ -68,21 +69,24 @@ def transformCategoricalVariables(data_toChange, features):
 # Ecrit les résultats de la prédiction du modèle dans fileName
 def printResults(targets_test, targets_predicted, fileName):
 
-    fileToWrite = open(fileName,"w")
 
-    i = 0
-    while i < len(targets_test) and i < len(targets_predicted):
-        difference = abs(targets_test[i] - abs(targets_predicted[i]))
-        if abs(targets_predicted[i]) > targets_test[i]:
-            sign = "Predicted higher"
-        else:
-            sign = "Predicted lower"
-        
-        line = "Expected : " + str(targets_test[i]) + " | Got : " +str(round(abs(targets_predicted[i]), 2)) + "| Difference : " + str(round(difference, 2)) + " (" + sign + ")\n"
-        fileToWrite.write(line)
-        i = i + 1
+    with open(fileName, 'w') as csvfile:
 
-    fileToWrite.close()
+        # creating a csv writer object  
+        csvwriter = csv.writer(csvfile)
+
+        fields = ['Expected', 'Got', 'Difference', 'Predicted lower or higher']
+
+        i = 0
+        while i < len(targets_test) and i < len(targets_predicted):
+            difference = abs(targets_test[i] - abs(targets_predicted[i]))
+            if abs(targets_predicted[i]) > targets_test[i]:
+                sign = "Predicted higher"
+            else:
+                sign = "Predicted lower"
+            
+            csvwriter.writerow([str(targets_test[i]), str(round(abs(targets_predicted[i]), 2)), str(round(difference, 2)), sign])
+            i = i + 1
 
 
 
@@ -143,7 +147,7 @@ def regressionLineaireCreatures():
 
     print("Prédiction pour les créatures terminée")
 
-    printResults(targets_test.values, target_prediction, "../results/linearRegression_creatures.txt")
+    printResults(targets_test.values, target_prediction, "../results/linearRegression/csv/linearRegression_creatures.csv")
 
 #---------------------------------------
 
@@ -209,7 +213,7 @@ def regressionLineaireSpells():
 
     print("Prédiction pour les sorts terminée")
 
-    printResults(targets_test.values, target_prediction, "../results/linearRegression_spells.txt")
+    printResults(targets_test.values, target_prediction, "../results/linearRegression/csv/linearRegression_spells.csv")
 
 #---------------------------------------
 
@@ -275,7 +279,7 @@ def regressionLineaireWeapons():
 
     print("Prédiction pour les armes terminée")
 
-    printResults(targets_test.values, target_prediction, "../results/linearRegression_weapons.txt")
+    printResults(targets_test.values, target_prediction, "../results/linearRegression/csv/linearRegression_weapons.csv")
 
 #---------------------------------------
 

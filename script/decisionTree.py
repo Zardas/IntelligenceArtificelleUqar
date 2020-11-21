@@ -1,6 +1,8 @@
 from sklearn import tree
 from sklearn.model_selection import train_test_split
 import pandas as pd
+import csv
+
 
 # Correction des derniers soucis du csv
 # Des | et des _ ont été rajoutés lors du passage json->csv, il faut les supprimer
@@ -84,16 +86,26 @@ def transformCategoricalVariables(data_toChange, features):
 # Ecrit les résultats de la prédiction du modèle dans fileName
 def printResults(targets_test, targets_predicted, fileName):
 
-    fileToWrite = open(fileName,"w")
+    fields = ['Expected', 'Got']
+    rows = []
 
     i = 0
     while i < len(targets_test) and i < len(targets_predicted):
         
-        line = "Expected : " + targets_test[i] + " | Got : " + targets_predicted[i] + "\n"
-        fileToWrite.write(line)
+        rows.append([targets_test[i], targets_predicted[i]])
+
         i = i + 1
 
-    fileToWrite.close()
+
+    with open(fileName, 'w') as csvfile:  
+        # creating a csv writer object  
+        csvwriter = csv.writer(csvfile)  
+            
+        # writing the fields  
+        csvwriter.writerow(fields)  
+            
+        # writing the data rows  
+        csvwriter.writerows(rows)
 
 
 
@@ -163,7 +175,7 @@ def decisionTreeCreatures():
 
     print("Prédiction pour les creatures terminée (arbre de décision)")
 
-    printResults(targets_test, target_prediction, "../results/decisionsTree_creatures.txt")
+    printResults(targets_test, target_prediction, "../results/decisionTree/csv/decisionsTree_creatures.csv")
 
 #---------------------------------------
 
@@ -238,7 +250,7 @@ def decisionTreeSorts():
 
     print("Prédiction pour les sorts terminée (arbre de décision)")
 
-    printResults(targets_test, target_prediction, "../results/decisionsTree_spells.txt")
+    printResults(targets_test, target_prediction, "../results/decisionTree/csv/decisionsTree_spells.csv")
 
 #---------------------------------------
 
@@ -316,7 +328,7 @@ def decisionTreeWeapons():
 
     print("Prédiction pour les armes terminée (arbre de décision)")
 
-    printResults(targets_test, target_prediction, "../results/decisionsTree_weapons.txt")
+    printResults(targets_test, target_prediction, "../results/decisionTree/csv/decisionsTree_weapons.csv")
 
 #---------------------------------------
 
