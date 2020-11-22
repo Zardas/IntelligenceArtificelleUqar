@@ -66,11 +66,11 @@ def transformCategoricalVariables(data_toChange, features):
 
 
 
-# Ecrit les résultats de la prédiction du modèle dans fileName
-def printResults(targets_test, targets_predicted, fileName):
+# Ecrit les résultats de la prédiction du modèle dans fileName.csv
+def printResultsCsv(targets_test, targets_predicted, fileName):
 
 
-    with open(fileName, 'w') as csvfile:
+    with open(fileName, 'w', newline='') as csvfile:
 
         # creating a csv writer object  
         csvwriter = csv.writer(csvfile)
@@ -92,6 +92,36 @@ def printResults(targets_test, targets_predicted, fileName):
 
 
 
+def printResultsTxt(targets_test, targets_predicted, fileName):
+
+
+    fileToWrite = open(fileName, 'w', newline='')
+
+    i = 0
+    while i < len(targets_test) and i < len(targets_predicted):
+        difference = abs(targets_test[i] - abs(targets_predicted[i]))
+        if abs(targets_predicted[i]) > targets_test[i]:
+            sign = "Predicted higher"
+        else:
+            sign = "Predicted lower"
+        
+        line = "Excepted : " + str(targets_test[i]) + " | Got : " + str(round(abs(targets_predicted[i]), 2)) + " | Difference : " + str(round(difference, 2)) + " (" + sign + ")\n"
+        fileToWrite.write(line)
+        i = i + 1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -105,7 +135,7 @@ def printResults(targets_test, targets_predicted, fileName):
 #---------------------------------------
 # REGRESSION LINEAIRE POUR LES CREATURES
 
-def regressionLineaireCreatures():
+def regressionLineaireCreatures(savingFormat):
 
     data_creatures = pd.read_csv('../data/clean/csv/creatures.csv')
     data_creatures = miseEnFormeFeatures(data_creatures)
@@ -147,7 +177,10 @@ def regressionLineaireCreatures():
 
     print("Prédiction pour les créatures terminée")
 
-    printResults(targets_test.values, target_prediction, "../results/linearRegression/csv/linearRegression_creatures.csv")
+    if(savingFormat == "txt"):
+        printResultsTxt(targets_test.values, target_prediction, "../results/linearRegression/txt/linearRegression_creatures.txt")
+    else:
+        printResultsCsv(targets_test.values, target_prediction, "../results/linearRegression/csv/linearRegression_creatures.csv")
 
 #---------------------------------------
 
@@ -175,7 +208,7 @@ def regressionLineaireCreatures():
 #---------------------------------------
 # REGRESSION LINEAIRE POUR LES SORTS
 
-def regressionLineaireSpells():
+def regressionLineaireSpells(savingFormat):
 
     data_spells = pd.read_csv('../data/clean/csv/spells.csv')
     data_spells = miseEnFormeFeatures(data_spells)
@@ -213,7 +246,10 @@ def regressionLineaireSpells():
 
     print("Prédiction pour les sorts terminée")
 
-    printResults(targets_test.values, target_prediction, "../results/linearRegression/csv/linearRegression_spells.csv")
+    if(savingFormat == "txt"):
+        printResultsTxt(targets_test.values, target_prediction, "../results/linearRegression/txt/linearRegression_spells.txt")
+    else:
+        printResultsCsv(targets_test.values, target_prediction, "../results/linearRegression/csv/linearRegression_spells.csv")
 
 #---------------------------------------
 
@@ -241,7 +277,7 @@ def regressionLineaireSpells():
 #---------------------------------------
 # REGRESSION LINEAIRE POUR LES ARMES
 
-def regressionLineaireWeapons():
+def regressionLineaireWeapons(savingFormat):
 
     data_weapons = pd.read_csv('../data/clean/csv/weapons.csv')
     data_weapons = miseEnFormeFeatures(data_weapons)
@@ -279,7 +315,10 @@ def regressionLineaireWeapons():
 
     print("Prédiction pour les armes terminée")
 
-    printResults(targets_test.values, target_prediction, "../results/linearRegression/csv/linearRegression_weapons.csv")
+    if(savingFormat == "txt"):
+        printResultsTxt(targets_test.values, target_prediction, "../results/linearRegression/txt/linearRegression_weapons.txt")
+    else:
+        printResultsCsv(targets_test.values, target_prediction, "../results/linearRegression/csv/linearRegression_weapons.csv")
 
 #---------------------------------------
 
@@ -319,17 +358,13 @@ def regressionLineaireWeapons():
 
 
 #Creatures
-regressionLineaireCreatures()
+regressionLineaireCreatures("")
 
 #Sorts
-regressionLineaireSpells()
+regressionLineaireSpells("")
 
 #Armes
-regressionLineaireWeapons()
+regressionLineaireWeapons("")
 
 
 
-#https://larevueia.fr/regression-lineaire-fonctionnement-et-exemple-avec-python/
-#https://www.askpython.com/python/examples/polynomial-regression-in-python
-#https://www.askpython.com/python/examples/linear-regression-in-python
-#https://www.youtube.com/watch?v=rw84t7QU2O0
